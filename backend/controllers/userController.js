@@ -51,7 +51,8 @@ const loginUser = async (req, res) => {
 
     bcrypt.compare(password, user.password, (err, result) => {
       if (result) {
-        return res.status(200).send("User login successful");
+        // res.send("User login successful");
+        res.status(200).json({ redirect: true });
       } else {
         return res.status(409).send("Password is not correct");
       }

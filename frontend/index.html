@@ -6,13 +6,60 @@
     <title>Full stack expense tracker</title>
   </head>
   <body>
-    <div id="main"></div>
+    <div id="main">
+      <form id="expense-form" onsubmit="handleExpenseForm(event)">
+        <label for="amount">Choose Expense Amount:</label>
+        <br />
+        <input type="number" id="amount" name="amount" min="10" required />
+        <br />
+        <br />
+        <label for="description">Choose Description:</label>
+        <br />
+        <!-- <input type="text" id="description" name="description" required /> -->
+        <textarea
+          name="description"
+          id="description"
+          rows="5"
+          cols="30"
+          required
+        ></textarea>
+        <br /><br />
+        <label for="category">Choose a Category:</label>
+        <select name="category" id="category">
+          <option value="food">food</option>
+          <option value="electricity">electricity</option>
+          <option value="bills">Bills</option>
+          <option value="medicine">Medicine</option>
+        </select>
+        <br />
+        <br />
+        <button type="submit">Add Expense</button>
+      </form>
+      <ul id="expense-list"></ul>
+    </div>
     <script
       src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.11.0/axios.min.js"
       integrity="sha512-h9644v03pHqrIHThkvXhB2PJ8zf5E9IyVnrSfZg8Yj8k4RsO4zldcQc4Bi9iVLUCCsqNY0b4WXVV4UB+wbWENA=="
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     ></script>
-    <script src="script.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const EXPENSE_BASE_URL = "http://localhost:3000/expense";
+        axios
+          .get(`${EXPENSE_BASE_URL}`)
+          .then((res) => {
+            const expenses = res.data;
+            expenses.forEach((expense) => {
+              const { id, amount, description, category } = expense;
+              createLi(id, amount, description, category);
+            });
+          })
+          .catch((err) => {
+            console.log(err.message);
+          });
+      });
+    </script>
+    <script src="./script.js"></script>
   </body>
 </html>
