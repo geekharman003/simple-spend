@@ -1,5 +1,6 @@
 const User = require("../models/userModel");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 const createUser = async (req, res) => {
   try {
@@ -31,6 +32,10 @@ const createUser = async (req, res) => {
   }
 };
 
+const generateAccessToken = (id, name, email) => {
+  return jwt.sign({ id, name, email }, "secretkey");
+};
+
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -52,7 +57,8 @@ const loginUser = async (req, res) => {
     bcrypt.compare(password, user.password, (err, result) => {
       if (result) {
         // res.send("User login successful");
-        res.status(200).json({ redirect: true });
+        const token = generateAccessToken(user.id, user.name, user.email);
+        res.status(200).json({ redirect: true, token });
       } else {
         return res.status(409).send("Password is not correct");
       }

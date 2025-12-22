@@ -1,5 +1,5 @@
 const USER_BASE_URL = "http://localhost:3000/user";
-const EXPENSE_BASE_URL = "http://localhost:3000/expense";
+const EXPENSE_BASE_URL = "http://localhost:3000/expenses";
 
 const handleSignUpForm = (event) => {
   event.preventDefault();
@@ -36,6 +36,7 @@ const handleLoginForm = (event) => {
       password,
     })
     .then((res) => {
+      localStorage.setItem("token", res.data.token);
       if (res.data.redirect) {
         window.location.href = "index.html";
       }
@@ -52,30 +53,34 @@ const handleExpenseForm = (event) => {
   const amount = event.target.amount.value;
   const description = event.target.description.value;
   const category = event.target.category.value;
-
+  const token = localStorage.getItem("token");
   axios
-    .post(`${EXPENSE_BASE_URL}/addexpense`, {
-      amount,
-      description,
-      category,
-    })
+    .post(
+      `${EXPENSE_BASE_URL}/addexpense`,
+      {
+        amount,
+        description,
+        category,
+      },
+      { headers: { Authorization: token } },
+    )
     .then((res) => {
-      const { id, amount, description, category } = res.data;
-      createLi(id, amount, description, category);
+      const { amount, description, category } = res.data;
+      createLi(amount, description, category);
     })
     .catch((err) => {
       console.log(err.message);
     });
 };
 
-const createLi = (id, amount, description, category) => {
+const createLi = (amount, description, category) => {
   const ul = document.getElementById("expense-list");
   const li = document.createElement("li");
   const deleteBtn = document.createElement("button");
 
   deleteBtn.textContent = "Delete Button";
   deleteBtn.addEventListener("click", () => {
-    deleteExpense(id, li);
+    deleteExpense(li);
   });
   li.textContent = `${amount}-${description}-${category}`;
   li.appendChild(deleteBtn);
@@ -83,9 +88,10 @@ const createLi = (id, amount, description, category) => {
   ul.appendChild(li);
 };
 
-const deleteExpense = (id, li) => {
+const deleteExpense = (li) => {
+  const token = localStorage.getItem("token");
   axios
-    .delete(`${EXPENSE_BASE_URL}/delete/${id}`)
+    .delete(`${EXPENSE_BASE_URL}/delete`, { headers: { Authorization: token } })
     .then((res) => {
       if (res.data.success) {
         li.remove();

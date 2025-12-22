@@ -45,14 +45,18 @@
     ></script>
     <script>
       document.addEventListener("DOMContentLoaded", () => {
-        const EXPENSE_BASE_URL = "http://localhost:3000/expense";
+        const EXPENSE_BASE_URL = "http://localhost:3000/expenses";
+        const token = localStorage.getItem("token");
+        console.log(token);
         axios
-          .get(`${EXPENSE_BASE_URL}`)
+          .get(`${EXPENSE_BASE_URL}`, {
+            headers: { Authorization: `${token}` },
+          })
           .then((res) => {
             const expenses = res.data;
             expenses.forEach((expense) => {
-              const { id, amount, description, category } = expense;
-              createLi(id, amount, description, category);
+              const { amount, description, category } = expense;
+              createLi(amount, description, category);
             });
           })
           .catch((err) => {
