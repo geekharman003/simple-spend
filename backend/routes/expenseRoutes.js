@@ -14,7 +14,7 @@ router.post(
   expenseController.addExpense
 );
 router.delete(
-  "/delete/",
+  "/delete/:id",
   authentication.authenticateUser,
   expenseController.deleteExpense
 );

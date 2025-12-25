@@ -62,25 +62,25 @@ const handleExpenseForm = (event) => {
         description,
         category,
       },
-      { headers: { Authorization: token } },
+      { headers: { Authorization: token } }
     )
     .then((res) => {
-      const { amount, description, category } = res.data;
-      createLi(amount, description, category);
+      const { id, amount, description, category } = res.data;
+      createLi(id, amount, description, category);
     })
     .catch((err) => {
       console.log(err.message);
     });
 };
 
-const createLi = (amount, description, category) => {
+const createLi = (id, amount, description, category) => {
   const ul = document.getElementById("expense-list");
   const li = document.createElement("li");
   const deleteBtn = document.createElement("button");
 
   deleteBtn.textContent = "Delete Button";
   deleteBtn.addEventListener("click", () => {
-    deleteExpense(li);
+    deleteExpense(id, li);
   });
   li.textContent = `${amount}-${description}-${category}`;
   li.appendChild(deleteBtn);
@@ -88,10 +88,12 @@ const createLi = (amount, description, category) => {
   ul.appendChild(li);
 };
 
-const deleteExpense = (li) => {
+const deleteExpense = (id, li) => {
   const token = localStorage.getItem("token");
   axios
-    .delete(`${EXPENSE_BASE_URL}/delete`, { headers: { Authorization: token } })
+    .delete(`${EXPENSE_BASE_URL}/delete/${id}`, {
+      headers: { Authorization: token },
+    })
     .then((res) => {
       if (res.data.success) {
         li.remove();
@@ -100,4 +102,29 @@ const deleteExpense = (li) => {
     .catch((err) => {
       console.log(err.message);
     });
+};
+
+const showLeaderBoard = () => {
+  const leaderboardList = document.getElementById("leaderboard-list");
+  leaderboardList.innerHTML = "";
+  axios
+    .get(`${USER_BASE_URL}/premiumUsers`)
+    .then((res) => {
+      const users = res.data;
+      users.sort((a, b) => b["totalExpense"] - a["totalExpense"]);
+      users.forEach((user) => {
+        const { name, totalExpense } = user;
+        addUserToLeaderBoard(leaderboardList,name, totalExpense);
+      });
+    })
+    .catch((err) => {
+      console.log(err.message);
+    });
+};
+
+const addUserToLeaderBoard = (leaderboardList,name, totalExpense) => {
+  const li = document.createElement("li");
+  li.textContent = `Name-${name},Total Expenses-${totalExpense}`;
+
+  leaderboardList.appendChild(li);
 };

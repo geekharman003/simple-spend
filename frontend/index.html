@@ -4,40 +4,57 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Full stack expense tracker</title>
+    <link rel="stylesheet" href="styles.css" />
     <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
   </head>
   <body>
     <div id="main">
+      <header><h2>Expense Tracker</h2></header>
       <button style="margin-left: 60%" id="pay-btn">Buy Premium</button>
-      <form id="expense-form" onsubmit="handleExpenseForm(event)">
-        <label for="amount">Choose Expense Amount:</label>
-        <br />
-        <input type="number" id="amount" name="amount" min="10" required />
-        <br />
-        <br />
-        <label for="description">Choose Description:</label>
-        <br />
-        <!-- <input type="text" id="description" name="description" required /> -->
-        <textarea
-          name="description"
-          id="description"
-          rows="5"
-          cols="30"
-          required
-        ></textarea>
-        <br /><br />
-        <label for="category">Choose a Category:</label>
-        <select name="category" id="category">
-          <option value="food">food</option>
-          <option value="electricity">electricity</option>
-          <option value="bills">Bills</option>
-          <option value="medicine">Medicine</option>
-        </select>
-        <br />
-        <br />
-        <button type="submit">Add Expense</button>
-      </form>
-      <ul id="expense-list"></ul>
+      <div id="expense-form-container">
+        <form id="expense-form" onsubmit="handleExpenseForm(event)">
+          <label for="amount">Choose Expense Amount:</label>
+          <br />
+          <input type="number" id="amount" name="amount" min="10" required />
+          <br />
+          <br />
+          <label for="description">Choose Description:</label>
+          <br />
+          <!-- <input type="text" id="description" name="description" required /> -->
+          <textarea
+            name="description"
+            id="description"
+            rows="5"
+            cols="30"
+            required
+          ></textarea>
+          <br /><br />
+          <label for="category">Choose a Category:</label>
+          <select name="category" id="category">
+            <option value="food">food</option>
+            <option value="electricity">electricity</option>
+            <option value="bills">Bills</option>
+            <option value="medicine">Medicine</option>
+          </select>
+          <br />
+          <br />
+          <button type="submit">Add Expense</button>
+        </form>
+
+        <div id="leaderboard-section">
+          <p id="premium-user-message"></p>
+        <h3>Leaderboard</h3>
+        <button id="leaderboard-btn" onclick="showLeaderBoard()">
+          Show Leaderboard
+        </button>
+        <ul id="leaderboard-list"></ul>
+      </div>
+      </div>
+      <br />
+      <div id="expenses-section">
+        <h2>Expenses</h2>
+        <ul id="expense-list"></ul>
+      </div>
     </div>
     <script
       src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.11.0/axios.min.js"
@@ -48,22 +65,54 @@
     <script>
       document.addEventListener("DOMContentLoaded", () => {
         const EXPENSE_BASE_URL = "http://localhost:3000/expenses";
+        const premiumUserMessage = document.getElementById(
+          "premium-user-message"
+        );
+        const payBtn = document.getElementById("pay-btn");
+        const leaderboardSection = document.getElementById(
+          "leaderboard-section"
+        );
         const token = localStorage.getItem("token");
+
         axios
           .get(`${EXPENSE_BASE_URL}`, {
             headers: { Authorization: `${token}` },
           })
           .then((res) => {
-            const expenses = res.data;
+            const { expenses, isPremiumUser } = res.data;
+            if (isPremiumUser) {
+              enablePremiumUserFeatures(
+                premiumUserMessage,
+                payBtn,
+                leaderboardSection
+              );
+            }
             expenses.forEach((expense) => {
-              const { amount, description, category } = expense;
-              createLi(amount, description, category);
+              const { id, amount, description, category } = expense;
+              createLi(id, amount, description, category);
             });
           })
           .catch((err) => {
+            if (err.response.data.isPremiumUser) {
+              enablePremiumUserFeatures(
+                premiumUserMessage,
+                payBtn,
+                leaderboardSection
+              );
+            }
             console.log(err.message);
           });
       });
+
+      const enablePremiumUserFeatures = (
+        premiumUserMessage,
+        payBtn,
+        leaderboardSection
+      ) => {
+        premiumUserMessage.textContent = "You are now a premium user.😀";
+        payBtn.style.display = "none";
+        leaderboardSection.style.display = "initial";
+      };
     </script>
     <script src="./cashfree.js"></script>
     <script src="./script.js"></script>

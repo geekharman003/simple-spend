@@ -19,6 +19,14 @@ const User = db.define("user", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  isPremium: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
+  totalExpense: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+  },
 });
 
 module.exports = User;

@@ -55,8 +55,9 @@ const loginUser = async (req, res) => {
     }
 
     bcrypt.compare(password, user.password, (err, result) => {
+      // if both passwords matches
       if (result) {
-        // res.send("User login successful");
+        // generate a token
         const token = generateAccessToken(user.id, user.name, user.email);
         res.status(200).json({ redirect: true, token });
       } else {
@@ -68,4 +69,17 @@ const loginUser = async (req, res) => {
   }
 };
 
-module.exports = { createUser, loginUser };
+const loadAllUsers = async (req, res) => {
+  try {
+    const users = await User.findAll({ raw: true });
+    if (!users.length) {
+      return res.status(404).send("no user found");
+    }
+
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
+
+module.exports = { createUser, loginUser, loadAllUsers };

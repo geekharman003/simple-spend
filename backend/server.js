@@ -1,11 +1,11 @@
+const db = require("./utils/db-connection");
 const express = require("express");
 const app = express();
-const db = require("./utils/db-connection");
+const cors = require("cors");
 const models = require("./models");
 const userRoutes = require("./routes/userRoutes");
 const expenseRoutes = require("./routes/expenseRoutes");
 const paymentsRoutes = require("./routes/paymentRoutes");
-const cors = require("cors");
 const PORT = 3000;
 
 app.use(express.json());
@@ -23,4 +23,4 @@ db.sync()
   })
   .catch((err) => {
     console.log(err.message);
-  });
+  });  

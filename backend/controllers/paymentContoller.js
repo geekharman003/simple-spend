@@ -1,7 +1,9 @@
 const cashfreeService = require("../services/cashfreeService");
 const Payments = require("../models/paymentModel");
-
+const User = require("../models/userModel");
 const processPayment = async (req, res) => {
+  const { user } = req;
+
   const orderId = "order_" + Date.now();
   const orderAmount = 2000;
   const orderCurrency = "INR";
@@ -18,8 +20,6 @@ const processPayment = async (req, res) => {
       customerPhone
     );
 
-    console.log(paymentSessionId);
-
     // save the payment info in the database
     await Payments.create({
       orderId,
@@ -27,6 +27,7 @@ const processPayment = async (req, res) => {
       orderAmount,
       orderCurrency,
       paymentStatus: "Pending",
+      userId: user.id,
     });
 
     res.status(200).json({ paymentSessionId, orderId });
@@ -38,9 +39,23 @@ const processPayment = async (req, res) => {
 const fetchPaymentStatus = async (req, res) => {
   try {
     const { orderId } = req.params;
+    const { user } = req;
     const orderStatus = await cashfreeService.getPaymentStatus(orderId);
 
-    Payments.update(
+    if (orderStatus === "Success") {
+      await User.update(
+        {
+          isPremium: true,
+        },
+        {
+          where: {
+            id: user.id,
+          },
+        }
+      );
+    }
+
+    await Payments.update(
       {
         paymentStatus: orderStatus,
       },
