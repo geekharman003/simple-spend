@@ -4,7 +4,7 @@ const BASE_URL = "http://localhost:3000";
 
 // pagination variables
 let page = 0;
-const limit = 10;
+let limit = 2;
 let skip = 0;
 let totalItems = null; //stores the total expenses
 let fetchedItems = 0; //tracks how many expenses are fetched
@@ -165,8 +165,9 @@ const setTotalItemsCount = (count) => {
 // called when user clicked on prev nutton
 const loadPrevNItems = async () => {
   // only call the api when not on first page
+  console.log(fetchedItems,totalItems)
   if (page > 1) {
-    fetchedItems = fetchedItems - 10;
+    fetchedItems = fetchedItems - limit;
     page--;
     skip = page * limit - limit;
     const table = document.getElementById("expense-table");
@@ -200,8 +201,9 @@ const loadPrevNItems = async () => {
 // called when the user clicked on next button
 const loadNextNItems = async () => {
   // call the api only when all records are not fetched
+  console.log(fetchedItems,totalItems)
   if (fetchedItems < totalItems) {
-    fetchedItems = fetchedItems + 10;
+    fetchedItems = fetchedItems + limit;
     page++;
     skip = page * limit - limit;
     const table = document.getElementById("expense-table");
@@ -241,6 +243,15 @@ const addNItemsToUi = (amount, description, category, table) => {
   `;
 
   table.appendChild(tr);
+};
+
+const changeRowsPerPage = (event) => {
+  limit = Number(event.target.value);
+  page = 0;
+  skip = 0;
+  fetchedItems = 0;
+
+  // console.log(event.target.value);
 };
 
 const enablePremiumUserFeatures = () => {
