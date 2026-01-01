@@ -64,44 +64,33 @@
           </select>
         </div>
         <h3>Day to Day Expenses</h3>
-        <table id="monthly-expense-table">
-          <tr id="monthly-expense-headings">
-            <th>Date</th>
+        <table id="expense-table">
+          <tr id="expense-headings">
+            <th>amount</th>
             <th>Description</th>
             <th>Category</th>
-            <th>Income</th>
-            <th>Expense</th>
-          </tr>
-          <tr>
-            <td>04-01-2026</td>
-            <td>purchased headphones</td>
-            <td>shopping</td>
-            <td>10000</td>
-            <td>9000</td>
-          </tr>
-          <tr>
-            <td>10-01-2026</td>
-            <td>bought milk</td>
-            <td>milk</td>
-            <td>15000</td>
-            <td>4000</td>
-          </tr>
-          <tr>
-            <td>10-01-2026</td>
-            <td>bought milk</td>
-            <td>milk</td>
-            <td>15000</td>
-            <td>4000</td>
-          </tr>
-          <tr>
-            <td>10-01-2026</td>
-            <td>bought milk</td>
-            <td>milk</td>
-            <td>15000</td>
-            <td>4000</td>
           </tr>
         </table>
-        <button id="download-expense-btn" onclick="downloadExpense()">Download Expenses</button>
+        <div id="paginated-btns-container">
+          <button
+            id="prev-btn"
+            class="paginated-btn"
+            onclick="loadPrevNItems()"
+          >
+            prev
+          </button>
+          <button
+            id="next-btn"
+            class="paginated-btn"
+            onclick="loadNextNItems()"
+          >
+            next
+          </button>
+        </div>
+        <br />
+        <button id="download-expense-btn" onclick="downloadExpense()">
+          Download Expenses
+        </button>
       </div>
     </div>
     <script
@@ -112,6 +101,7 @@
     ></script>
     <script>
       document.addEventListener("DOMContentLoaded", () => {
+        let totalItemsCount = null;
         const EXPENSE_BASE_URL = "http://localhost:3000/expenses";
         const token = localStorage.getItem("token");
 
@@ -121,6 +111,9 @@
           })
           .then((res) => {
             const { expenses, isPremiumUser } = res.data;
+            totalItemsCount = expenses.length;
+            setTotalItemsCount(totalItemsCount);
+            loadNextNItems();
             if (isPremiumUser) {
               enablePremiumUserFeatures();
             }

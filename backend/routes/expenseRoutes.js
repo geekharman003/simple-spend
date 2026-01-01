@@ -18,5 +18,6 @@ router.delete(
   authentication.authenticateUser,
   expenseController.deleteExpense
 );
+router.get("/loadNExpenses", expenseController.loadNExpenses);
 
 module.exports = router;

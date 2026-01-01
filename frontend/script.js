@@ -2,6 +2,13 @@ const USER_BASE_URL = "http://localhost:3000/user";
 const EXPENSE_BASE_URL = "http://localhost:3000/expenses";
 const BASE_URL = "http://localhost:3000";
 
+// pagination variables
+let page = 0;
+const limit = 10;
+let skip = 0;
+let totalItems = null; //stores the total expenses
+let fetchedItems = 0; //tracks how many expenses are fetched
+
 const handleSignUpForm = (event) => {
   event.preventDefault();
   const name = event.target.name.value;
@@ -151,14 +158,98 @@ const addUserToLeaderBoard = (leaderboardList, name, totalExpenses) => {
   leaderboardList.appendChild(li);
 };
 
+const setTotalItemsCount = (count) => {
+  totalItems = count;
+};
+
+// called when user clicked on prev nutton
+const loadPrevNItems = async () => {
+  // only call the api when not on first page
+  if (page > 1) {
+    fetchedItems = fetchedItems - 10;
+    page--;
+    skip = page * limit - limit;
+    const table = document.getElementById("expense-table");
+    table.innerHTML = "";
+    table.innerHTML = `
+    <tr id="expense-headings">
+      <th>amount</th>
+      <th>Description</th>
+      <th>Category</th>
+    </tr>`;
+
+    try {
+      const res = await axios.get(
+        `${EXPENSE_BASE_URL}/loadNExpenses?limit=${limit}&skip=${skip}`
+      );
+
+      const expenses = res.data;
+
+      expenses.forEach((expense) => {
+        const { amount, description, category } = expense;
+        addNItemsToUi(amount, description, category, table);
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  } else {
+    console.log("you are at first page");
+  }
+};
+
+// called when the user clicked on next button
+const loadNextNItems = async () => {
+  // call the api only when all records are not fetched
+  if (fetchedItems < totalItems) {
+    fetchedItems = fetchedItems + 10;
+    page++;
+    skip = page * limit - limit;
+    const table = document.getElementById("expense-table");
+    table.innerHTML = "";
+    table.innerHTML = `
+    <tr id="expense-headings">
+      <th>amount</th>
+      <th>Description</th>
+      <th>Category</th>
+    </tr>`;
+    try {
+      const res = await axios.get(
+        `${EXPENSE_BASE_URL}/loadNExpenses?limit=${limit}&skip=${skip}`
+      );
+
+      const expenses = res.data;
+
+      expenses.forEach((expense) => {
+        const { amount, description, category } = expense;
+        addNItemsToUi(amount, description, category, table);
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  } else {
+    console.log("all the items are fetched");
+  }
+};
+
+const addNItemsToUi = (amount, description, category, table) => {
+  const tr = document.createElement("tr");
+
+  tr.innerHTML = `
+  <td>${amount}</td>
+  <td>${description}</td>
+  <td>${category}</td>
+  `;
+
+  table.appendChild(tr);
+};
+
 const enablePremiumUserFeatures = () => {
   const premiumUserMessage = document.getElementById("premium-user-message");
   const payBtn = document.getElementById("pay-btn");
   const leaderboardSection = document.getElementById("leaderboard-section");
   const downloadExpenseBtn = document.getElementById("download-expense-btn");
-  premiumUserMessage.textContent = "You are now a premium user.😀";
+  premiumUserMessage.textContent = "You are now a premium👑 user.😀";
   payBtn.style.display = "none";
   leaderboardSection.style.display = "initial";
   downloadExpenseBtn.style.display = "initial";
 };
-

@@ -141,4 +141,24 @@ const loadAllExpenses = async (req, res) => {
   }
 };
 
-module.exports = { addExpense, deleteExpense, loadAllExpenses };
+const loadNExpenses = async (req, res) => {
+  try {
+    const { limit, skip } = req.query;
+    
+    const expenses = await Expense.findAll({
+      raw: true,
+      limit: Number(limit),
+      offset: Number(skip),
+    });
+
+    res.status(200).json(expenses);
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({
+      message: error.message,
+      success: false,
+    });
+  }
+};
+
+module.exports = { addExpense, deleteExpense, loadAllExpenses, loadNExpenses };
