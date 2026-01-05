@@ -53,23 +53,8 @@
       <div id="expenses-section">
         <h2>Expenses</h2>
         <ul id="expense-list"></ul>
-      </div>
-      <div id="filtered-expenses-container">
-        <div>
-          <label for="expensesfilter">Select expenses filter:</label
-          ><select name="expensesfilter" id="expensesfilter">
-            <option value="daily">daily</option>
-            <option value="weekly">weekly</option>
-            <option value="monthly">monthly</option>
-          </select>
-        </div>
-        <h3>Day to Day Expenses</h3>
         <table id="expense-table">
-          <tr id="expense-headings">
-            <th>amount</th>
-            <th>Description</th>
-            <th>Category</th>
-          </tr>
+          <tr id="expense-headings"></tr>
         </table>
         <div id="paginated-btns-container">
           <div>
@@ -100,15 +85,17 @@
               id="next-btn"
               class="paginated-btn"
               onclick="loadNextNItems()"
+              disabled
             >
               next
             </button>
           </div>
         </div>
-        <br />
-        <button id="download-expense-btn" onclick="downloadExpense()">
+      </div>
+      <div >
+        <a href="#" onclick="downloadExpenses(event)" id="download-expense-btn">
           Download Expenses
-        </button>
+        </a>
       </div>
     </div>
     <script
@@ -119,8 +106,9 @@
     ></script>
     <script>
       document.addEventListener("DOMContentLoaded", () => {
-        let totalItemsCount = null;
         const EXPENSE_BASE_URL = "http://localhost:3000/expenses";
+        let totalItemsCount = null;
+        const table = document.getElementById("expense-table");
         const token = localStorage.getItem("token");
 
         axios
@@ -131,13 +119,13 @@
             const { expenses, isPremiumUser } = res.data;
             totalItemsCount = expenses.length;
             setTotalItemsCount(totalItemsCount);
-            loadNextNItems();
             if (isPremiumUser) {
               enablePremiumUserFeatures();
             }
             expenses.forEach((expense) => {
               const { id, amount, description, category } = expense;
-              createLi(id, amount, description, category);
+              addNItemsToUi(id, amount, description, category, table);
+              // createLi(id, amount, description, category);
             });
           })
           .catch((err) => {

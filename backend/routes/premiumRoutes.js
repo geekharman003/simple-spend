@@ -9,4 +9,10 @@ router.get(
   premiumController.loadLeaderBorad
 );
 
+router.get(
+  "/downloadExpenses",
+  authentication.authenticateUser,
+  premiumController.downloadExpenses
+);
+
 module.exports = router;

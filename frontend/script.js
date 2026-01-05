@@ -3,12 +3,13 @@ const EXPENSE_BASE_URL = "http://localhost:3000/expenses";
 const BASE_URL = "http://localhost:3000";
 
 // pagination variables
-let currentPage = 0;
-let limit = 2;
+let currentPage = 1;
+let currentPageCount = 0;
+let limit = 3;
 let skip = 0;
 let totalItems = null; //stores the total expenses
-let fetchedItems = 0; //tracks how many expenses are fetched
 let totalPages = null;
+
 const prevBtn = document.getElementById("prev-btn");
 const nextBtn = document.getElementById("next-btn");
 const currentPageElement = document.getElementById("current-page");
@@ -87,6 +88,7 @@ const handleExpenseForm = (event) => {
 
   const amount = event.target.amount.value;
   const description = event.target.description.value;
+  const table = document.getElementById("expense-table");
   const token = localStorage.getItem("token");
 
   axios
@@ -100,30 +102,40 @@ const handleExpenseForm = (event) => {
     )
     .then((res) => {
       const { id, amount, description, category } = res.data;
-      console.log(category);
-      createLi(id, amount, description, category);
+      addNItemsToUi(id, amount, description, category, table);
+      // createLi(id, amount, description, category,table);
     })
     .catch((err) => {
       console.log(err.message);
     });
 };
 
-const createLi = (id, amount, description, category) => {
-  const ul = document.getElementById("expense-list");
-  const li = document.createElement("li");
-  const deleteBtn = document.createElement("button");
+// const createLi = (id, amount, description, category) => {
+//   const ul = document.getElementById("expense-list");
+//   const li = document.createElement("li");
+//   const deleteBtn = document.createElement("button");
 
-  deleteBtn.textContent = "Delete";
-  deleteBtn.addEventListener("click", () => {
-    deleteExpense(id, li);
-  });
-  li.textContent = `${amount}-${description}-${category}`;
-  li.appendChild(deleteBtn);
+//   deleteBtn.textContent = "Delete";
+//   deleteBtn.addEventListener("click", () => {
+//     deleteExpense(id, li);
+//   });
+//   li.textContent = `${amount}-${description}-${category}`;
+//   li.appendChild(deleteBtn);
 
-  ul.appendChild(li);
-};
+//   ul.appendChild(li);
+// };
 
-const deleteExpense = (id, li) => {
+const deleteExpense = (id, tr) => {
+  currentPageCount--;
+
+  // if no items left on currentpage,
+  // load previous page items
+  if (currentPageCount === 0) {
+    if (totalPages > 1) {
+      totalPages--;
+    }
+    loadPrevNItems();
+  }
   const token = localStorage.getItem("token");
   axios
     .delete(`${EXPENSE_BASE_URL}/delete/${id}`, {
@@ -131,7 +143,7 @@ const deleteExpense = (id, li) => {
     })
     .then((res) => {
       if (res.data.success) {
-        li.remove();
+        tr.remove();
       }
     })
     .catch((err) => {
@@ -144,13 +156,9 @@ const showLeaderBoard = () => {
   leaderboardList.innerHTML = "";
   const token = localStorage.getItem("token");
   axios
-    .get(
-      `${BASE_URL}/premium/leaderBoard`,
-      {},
-      {
-        headers: { Authorization: token },
-      }
-    )
+    .get(`${BASE_URL}/premium/leaderBoard`, {
+      headers: { Authorization: token },
+    })
     .then((res) => {
       const users = res.data;
       users.forEach((user) => {
@@ -172,113 +180,155 @@ const addUserToLeaderBoard = (leaderboardList, name, totalExpenses) => {
 
 const setTotalItemsCount = (count) => {
   totalItems = count;
-  totalPages = Math.round(totalItems / limit);
+  totalPages = Math.ceil(totalItems / limit);
   totalPageElement.textContent = totalPages;
-  console.log(totalPages);
+  currentPageElement.textContent = totalPages;
 };
 
 // called when user clicked on prev nutton
 const loadPrevNItems = async () => {
-  // only call the api when not on first page
+  // only call the api when page is >=1
   if (currentPage > 1) {
     currentPage--;
-
-    // if current page is not the last page
     if (nextBtn.hasAttribute("disabled")) {
       nextBtn.removeAttribute("disabled");
     }
-
-    // disable the prev button when current page is 1
     if (currentPage === 1) {
       prevBtn.setAttribute("disabled", "true");
     }
+
+    skip = (currentPage - 1) * limit;
     currentPageElement.textContent = currentPage;
-    skip = currentPage * limit - limit;
-
-    const table = document.getElementById("expense-table");
-    table.innerHTML = "";
-    table.innerHTML = `
-    <tr id="expense-headings">
-    <th>amount</th>
-    <th>Description</th>
-    <th>Category</th>
-    </tr>`;
-
     try {
-      const res = await axios.get(
-        `${EXPENSE_BASE_URL}/loadNExpenses?limit=${limit}&skip=${skip}`
+      const table = document.getElementById("expense-table");
+      const response = await axios.get(
+        `${EXPENSE_BASE_URL}/loadNExpenses?skip=${skip}&limit=${limit}`
       );
+      table.innerHTML = "";
+      table.innerHTML = `
+      <tr id="expense-headings">
+      <th>amount</th>
+      <th>Description</th>
+      <th>Category</th>
+      <th></th>
+      </tr>
+      `;
 
-      const expenses = res.data;
-      // fetchedItems = fetchedItems - expenses.length;
+      currentPageCount = 0;
+      const expenses = response.data;
 
       expenses.forEach((expense) => {
-        const { amount, description, category } = expense;
-        addNItemsToUi(amount, description, category, table);
+        const { id, amount, description, category } = expense;
+        addNItemsToUi(id, amount, description, category, table);
       });
     } catch (error) {
-      console.log(error);
+      console.error(error.message);
     }
   } else {
-    console.log("you are at first page");
+    console.log("ypu are at first page");
   }
 };
 
 // called when the user clicked on next button
 const loadNextNItems = async () => {
-  // call the api only when all records are not fetched
   if (currentPage < totalPages) {
     currentPage++;
 
-    // if current page is the last page
-    if (currentPage === totalPages) {
-      nextBtn.setAttribute("disabled", "true");
-    }
-
     //show prev button when current page is not 1
-    else if (currentPage > 1) {
+    if (currentPage > 1) {
       if (prevBtn.hasAttribute("disabled")) {
         prevBtn.removeAttribute("disabled");
       }
     }
+
+    // if current page is the last page
+    // disable next button
+    if (currentPage === totalPages) {
+      nextBtn.setAttribute("disabled", "true");
+    }
+
+    skip = (currentPage - 1) * limit;
     currentPageElement.textContent = currentPage;
-    skip = currentPage * limit - limit;
-    const table = document.getElementById("expense-table");
-    table.innerHTML = "";
-    table.innerHTML = `
-    <tr id="expense-headings">
-    <th>amount</th>
-    <th>Description</th>
-    <th>Category</th>
-    </tr>`;
     try {
+      const table = document.getElementById("expense-table");
       const res = await axios.get(
         `${EXPENSE_BASE_URL}/loadNExpenses?limit=${limit}&skip=${skip}`
       );
 
+      table.innerHTML = "";
+      table.innerHTML = `
+      <tr id="expense-headings">
+      <th>amount</th>
+      <th>Description</th>
+      <th>Category</th>
+      <th></th>
+      </tr>`;
+
+      currentPageCount = 0;
       const expenses = res.data;
-      // fetchedItems = fetchedItems + expenses.length;
 
       expenses.forEach((expense) => {
-        const { amount, description, category } = expense;
-        addNItemsToUi(amount, description, category, table);
+        const { id, amount, description, category } = expense;
+        addNItemsToUi(id, amount, description, category, table);
       });
     } catch (error) {
       console.log(error);
     }
   } else {
-    console.log("all the items are fetched");
+    console.log("you are at last page");
   }
 };
 
-const addNItemsToUi = (amount, description, category, table) => {
+const addNItemsToUi = (id, amount, description, category, table) => {
+  // if the current page become full
+  if (currentPageCount === limit) {
+    // check whether we already have a next page,if yes,then
+    // first load the expenses of next page
+    // if(currentPage < totalPages){
+    //   loadNextNItems();
+    //   addNItemsToUi(id,amount,description,category,table);
+    //   return;
+    // }
+
+    // otherwise create a new page
+    currentPageCount = 0;
+    currentPage++;
+    if (currentPage > totalPages) {
+      totalPages++;
+    }
+
+    if (prevBtn.hasAttribute("disabled")) {
+      prevBtn.removeAttribute("disabled");
+    }
+    table.innerHTML = "";
+    table.innerHTML = `<tr id="expense-headings">
+    <th>amount</th>
+    <th>Description</th>
+    <th>Category</th>
+    <th></th>
+    </tr>`;
+    currentPageElement.textContent = currentPage;
+    totalPageElement.textContent = currentPage;
+  }
+
+  currentPageCount++;
   const tr = document.createElement("tr");
+  const deleteBtn = document.createElement("button");
+
+  deleteBtn.textContent = "Delete";
+  deleteBtn.className = "delete-expense-btn";
+  deleteBtn.addEventListener("click", () => {
+    deleteExpense(id, tr);
+  });
 
   tr.innerHTML = `
   <td>${amount}</td>
   <td>${description}</td>
   <td>${category}</td>
   `;
+  const td = document.createElement("td");
+  td.appendChild(deleteBtn);
+  tr.appendChild(td);
 
   table.appendChild(tr);
 };
@@ -287,10 +337,40 @@ const changeRowsPerPage = (event) => {
   limit = Number(event.target.value);
   currentPage = 0;
   skip = 0;
-  fetchedItems = 0;
   totalPages = Math.round(totalItems / limit);
+  if (totalPages > 1) {
+    if (nextBtn.hasAttribute("disabled")) {
+      nextBtn.removeAttribute("disabled");
+    }
+  }
   totalPageElement.textContent = totalPages;
+  prevBtn.setAttribute("disabled", "true");
   loadNextNItems();
+};
+
+const downloadExpenses = async (event) => {
+  event.preventDefault();
+  const token = localStorage.getItem("token");
+
+  const response = await axios.get(`${BASE_URL}/premium/downloadExpenses`, {
+    responseType: "blob",
+    headers: { Authorization: token },
+  });
+
+  const blob = new Blob([response.data], {
+    type: response.headers["content-type"],
+  });
+
+  const url = window.URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "expenses.csv";
+  document.body.appendChild(a);
+  a.click();
+
+  a.remove();
+  window.URL.revokeObjectURL(url);
 };
 
 const enablePremiumUserFeatures = () => {

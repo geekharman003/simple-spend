@@ -11,12 +11,14 @@ body {
 button {
   font-family: inherit;
   width: fit-content;
+  cursor: pointer;
 }
 
 /* signup and login page css */
 #signup-form-container,
 #login-form-container,
-#forgot-form-container,#reset-form-container {
+#forgot-form-container,
+#reset-form-container {
   height: 100vh;
   display: flex;
   justify-content: center;
@@ -81,12 +83,16 @@ button {
   font-size: 13px;
 }
 
-.login-link,.signup-link,.forgot-link {
+.login-link,
+.signup-link,
+.forgot-link {
   color: black;
   text-decoration: none;
 }
 
-.login-link span,.signup-link span,.forgot-link span {
+.login-link span,
+.signup-link span,
+.forgot-link span {
   color: blue;
   font-weight: 500;
 }
@@ -150,12 +156,12 @@ button {
   margin-bottom: 5px;
 }
 
-#expenses-section li button {
+button.delete-expense-btn {
   padding: 5px;
   background-color: rgb(190, 60, 60);
   border: none;
   color: white;
-  margin-left: 5px;
+  /* margin: 5px; */
   border-radius: 5px;
 }
 
@@ -192,7 +198,6 @@ button {
   }
 }
 
-
 /* day to day expenses css */
 #filtered-expenses-container {
   display: flex;
@@ -205,12 +210,14 @@ button {
   margin: 5px 0;
 }
 
-#expense-table, th, td {
+#expense-table,
+th,
+td {
   border-collapse: collapse;
   border: 1px solid black;
   padding: 5px;
 }
-#expense-table tr:nth-child(even){
+#expense-table tr:nth-child(even) {
   background-color: rgb(228, 228, 143);
 }
 
@@ -229,5 +236,9 @@ button {
 
 #download-expense-btn {
   display: none;
+  background-color: green;
+  padding: 5px;
+  border-radius: 5px;
+  color: white;
+  text-decoration: none;
 }
-
